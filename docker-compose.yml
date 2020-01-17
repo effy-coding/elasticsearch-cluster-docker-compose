@@ -1,0 +1,168 @@
+version: '2.1'
+services:
+  elastic01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+    container_name: es01
+    environment:
+      - node.name=es01-node
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es03-node,es01-node,es02-node
+      - discovery.seed_hosts=es01.example.com:9300,es02.example.com:9300,es03.example.com:9300
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - network.host=0.0.0.0
+      - node.master=true
+      - node.data=true
+      - discovery.zen.minimum_master_nodes=1
+      - http.port=9200
+      - transport.tcp.port=9300
+      - network.publish_host=${INTERNAL_HOST_1}
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=my_password
+      - path.repo=/usr/share/elasticsearch/backup
+    
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+      - backup:/usr/share/elasticsearch/backup
+    extra_hosts:
+      - "es01.example.com:${INTERNAL_HOST_1}"
+      - "es02.example.com:${INTERNAL_HOST_2}"
+      - "es03.example.com:${INTERNAL_HOST_3}"
+    ports:
+      - 9300:9300
+    networks:
+      - elastic
+    restart: always
+
+  elastic02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+    container_name: es02
+    environment:
+      - node.name=es02-node
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es03-node,es01-node,es02-node
+      - discovery.seed_hosts=es01.example.com:9300,es02.example.com:9300,es03.example.com:9300
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - network.host=0.0.0.0
+      - node.master=true
+      - node.data=true
+      - discovery.zen.minimum_master_nodes=1
+      - http.port=9200
+      - transport.tcp.port=9300
+      - network.publish_host=${INTERNAL_HOST_2}
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=my_password
+      - path.repo=/usr/share/elasticsearch/backup
+    
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data02:/usr/share/elasticsearch/data
+      - backup:/usr/share/elasticsearch/backup
+    extra_hosts:
+      - "es01.example.com:${INTERNAL_HOST_1}"
+      - "es02.example.com:${INTERNAL_HOST_2}"
+      - "es03.example.com:${INTERNAL_HOST_3}"
+    ports:
+      - 9300:9300
+    networks:
+      - elastic
+    restart: always
+
+  elastic03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
+    container_name: es03
+    environment:
+      - node.name=es03-node
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es03-node,es01-node,es02-node
+      - discovery.seed_hosts=es01.example.com:9300,es02.example.com:9300,es03.example.com:9300
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - network.host=0.0.0.0
+      - node.master=true
+      - node.data=true
+      - discovery.zen.minimum_master_nodes=1
+      - http.port=9200
+      - transport.tcp.port=9300
+      - network.publish_host=${INTERNAL_HOST_3}
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=my_password
+      - path.repo=/usr/share/elasticsearch/backup
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data03:/usr/share/elasticsearch/data
+      - backup:/usr/share/elasticsearch/backup
+    extra_hosts:
+      - "es01.example.com:${INTERNAL_HOST_1}"
+      - "es02.example.com:${INTERNAL_HOST_2}"
+      - "es03.example.com:${INTERNAL_HOST_3}"
+    ports:
+      - 9300:9300
+    networks:
+      - elastic
+    restart: always
+    
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.5.1
+    container_name: kibana7
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    restart: always
+
+  elasticsearch-node1-proxy:
+    image: nginx:latest
+    container_name: elasticsearch-proxy-nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./proxy/elasticsearch-node1-nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - elastic
+
+  elasticsearch-node2-proxy:
+    image: nginx:latest
+    container_name: elasticsearch-proxy-nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./proxy/elasticsearch-node2-nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - elastic
+      
+  elasticsearch-node3-proxy:
+    image: nginx:latest
+    container_name: elasticsearch-proxy-nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./proxy/elasticsearch-node3-nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - elastic
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+  data03:
+    driver: local
+  backup:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge

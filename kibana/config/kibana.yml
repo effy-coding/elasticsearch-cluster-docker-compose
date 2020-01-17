@@ -1,0 +1,12 @@
+server.name: kibana
+server.port: 5601
+server.host: "0.0.0.0"
+elasticsearch.username: elastic
+elasticsearch.password: my_password
+
+elasticsearch.hosts: [ "http://${INTERNAL_HOST_1}", "http://${INTERNAL_HOST_2}", "http://${INTERNAL_HOST_3}" ]
+
+xpack.security.enabled: true
+
+server.cors: true
+server.cors.origin: ['*']
